@@ -771,6 +771,7 @@ module _box_body() {
         _box_ribs();
         _box_latch_ribs();
         _box_hinge_ribs();
+        _box_hinge_ribs_invert();
         _box_stacking_latch_ribs();
         _box_top_grip();
         _box_label_holder();
