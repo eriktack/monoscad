@@ -1056,17 +1056,17 @@ module _box_rib_angle(ang=0) {
     children();
 }
 
-module _box_rib_shape(x=$b_total_lip_thickness, y=$b_rib_width) {
+module _box_rib_shape(x=$b_total_lip_thickness, y=$b_rib_width, radius_offset=0) {
     x0 = $b_edge_radius;
     angle_add = tan($br_angle) * y;
     _round_shape(x0)
     for (my = [0:1:1]) {
         mirror([0, my])
         polygon(points=[
-            [x0, 0],
+            [x0+radius_offset, 0],
             [x, 0],
             [x, y / 2],
-            [x0, y / 2 + angle_add],
+            [x0+radius_offset, y / 2 + angle_add],
         ]);
     }
 }
@@ -2178,5 +2178,41 @@ module _handle(placement="default") {
         _handle_part();
     } else {
         _handle_part();
+    }
+}
+
+// adds some makeshift ribs to enable placing the case upright
+module _box_hinge_ribs_invert() {
+    bottom_offset = 4.4;
+    bottom_hinge_rib_height = 18;
+    if($b_part == "bottom") {
+        _box_attachment_placement(hinge=true)
+        mirror([0,0,1])
+        translate([0,0,-bottom_offset]) {
+            _box_attachment_rib_pair() {
+                translate([-$b_rib_width / 2, 0, 0]) {
+                    rotate([0, 0, 90]) {
+                        union() {
+                            width = $b_rib_width * 2;
+                            hull() {
+                                translate([5,0,0])
+                                    mirror([0, 0, 1])
+                                        linear_extrude(height=bottom_hinge_rib_height)
+                                            translate([-$b_corner_radius - $b_wall_thickness, 0])
+                                                _box_rib_shape(x=$b_wall_thickness, y=width, radius_offset=7);
+                                translate([0, 0, -screw_eyelet_radius])
+                                    _box_hinge_screw_eyelet_body(width, angle=-180);
+                                _box_hinge_screw_eyelet_body(width, angle=-180);
+                            }
+                            difference(){
+                                _box_hinge_screw_eyelet_body(width, angle=360);
+                                translate([0,-$b_rib_width,bottom_offset])
+                                    cube([20,width,10]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
