@@ -61,6 +61,10 @@ label_holder_lip = 2;
 label_holder_thickness = 2 + label_thickness + label_fit_thickness;
 label_max_height = 30;
 
+// inverted hinge
+bottom_add_inverted_hinge = true;
+top_add_inverted_hinge = false;
+
 // Public modules
 
 /*
@@ -120,7 +124,9 @@ module rbox(
     handle=false,
     label=false,
     label_text="",
-    label_text_size=10
+    label_text_size=10,
+    bottom_inverted_hinge=true,
+    top_inverted_hinge=false,
 ) {
     // Set base dimensions
     $b_inner_width = width;
@@ -142,6 +148,11 @@ module rbox(
     // Set defaults
     $b_preview_assembled = false;
     $b_preview_box_open = false;
+    
+    $bottom_add_inverted_hinge = bottom_inverted_hinge;
+    $top_add_inverted_hinge = top_inverted_hinge;
+    
+
     rbox_size_adjustments()
     _box_rib_angle(0)
     // Render modules
@@ -1635,8 +1646,11 @@ module _clip_latch_shape() {
                 translate([-latch_base_size, 0])
                 square([bw, $b_latch_screw_separation]);
             }
+
+            // the latch will extend outside the box if its lower then ~35mm
+            low_height_adjustment = $b_top_inner_height+$b_bottom_inner_height < 35 ? 2 : 0;
             translate([-latch_base_size, 0])
-            square([bw, $b_latch_screw_separation + latch_base_size * 2.5]);
+                square([bw, $b_latch_screw_separation + latch_base_size * 2.5 - low_height_adjustment]);
         }
         // Hinge hole
         circle(d=shd + screw_hole_diameter_fit);
@@ -2184,31 +2198,39 @@ module _handle(placement="default") {
 
 // adds some makeshift ribs to enable placing the case upright
 module _box_hinge_ribs_invert() {
-    bottom_offset = 4.4;
-    bottom_hinge_rib_height = 18;
-    if($b_part == "bottom") {
-        _box_attachment_placement(hinge=true)
-        mirror([0,0,1])
-        translate([0,0,-bottom_offset]) {
-            _box_attachment_rib_pair() {
-                translate([-$b_rib_width / 2, 0, 0]) {
-                    rotate([0, 0, 90]) {
-                        union() {
-                            width = $b_rib_width * 2;
-                            hull() {
-                                translate([5,0,0])
-                                    mirror([0, 0, 1])
-                                        linear_extrude(height=bottom_hinge_rib_height)
-                                            translate([-$b_corner_radius - $b_wall_thickness, 0])
-                                                _box_rib_shape(x=$b_wall_thickness, y=width, radius_offset=7);
-                                translate([0, 0, -screw_eyelet_radius])
+//    $bottom_add_inverted_hinge = bottom_inverted_hinge;
+//    $top_add_inverted_hinge = top_inverted_hinge;
+    should_render = 
+        $b_part == "bottom" && $bottom_add_inverted_hinge ||
+        $b_part == "top" && $top_add_inverted_hinge;
+    if(should_render) {
+        bottom_offset = 4.4;
+        bottom_hinge_rib_height = 18;
+        if($b_part == "bottom" || $b_part == "top") {
+            _box_attachment_placement(hinge=true)
+            mirror([0,0,1])
+            translate([0,0,-bottom_offset]) {
+                _box_attachment_rib_pair() {
+                    translate([-$b_rib_width / 2, 0, 0]) {
+                        rotate([0, 0, 90]) {
+                            union() {
+                                width = $b_rib_width * 2;
+                                hull() {
+                                    inverted_rib_height = $b_part == "top" ? bottom_hinge_rib_height-2.7 : bottom_hinge_rib_height;
+                                    translate([5,0,0])
+                                        mirror([0, 0, 1])
+                                            linear_extrude(height=inverted_rib_height-2.7)
+                                                translate([-$b_corner_radius - $b_wall_thickness, 0])
+                                                    _box_rib_shape(x=$b_wall_thickness, y=width, radius_offset=7);
+                                    translate([0, 0, -screw_eyelet_radius])
+                                        _box_hinge_screw_eyelet_body(width, angle=-180);
                                     _box_hinge_screw_eyelet_body(width, angle=-180);
-                                _box_hinge_screw_eyelet_body(width, angle=-180);
-                            }
-                            difference(){
-                                _box_hinge_screw_eyelet_body(width, angle=360);
-                                translate([0,-$b_rib_width,bottom_offset])
-                                    cube([20,width,10]);
+                                }
+                                difference(){
+                                    _box_hinge_screw_eyelet_body(width, angle=360);
+                                    translate([0,-$b_rib_width,bottom_offset])
+                                        cube([20,width,10]);
+                                }
                             }
                         }
                     }

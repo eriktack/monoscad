@@ -5,7 +5,7 @@
  * Licensed under Creative Commons (4.0 International License) Attribution-ShareAlike
  */
 
-include <rugged-box-library.scad>;
+include <C:\Users\erikn\OneDrive\Documents\OpenSCAD\monoscad\rugged-box\rugged-box-library.scad>;
 include <gridfinity-rebuilt-openscad/standard.scad>;
 use <gridfinity-rebuilt-openscad/gridfinity-rebuilt-baseplate.scad>;
 use <gridfinity-rebuilt-openscad/gridfinity-rebuilt-utility.scad>;
@@ -16,10 +16,10 @@ Part = "assembled_open"; // ["bottom": Bottom, "top": Top, "latch": Latch, "stac
 
 /* [Dimensions] */
 // Interior side-to-side size in 42mm Gridfinity units
-Width = 4; // [1:1:10]
+Width = 6; // [1:1:10]
 
 // Interior front-to-back size in 42mm Gridfinity units
-Length = 2; // [1:1:10]
+Length = 4; // [1:1:10]
 
 // Interior bottom height in 7mm Gridfinity units
 Bottom_Height = 7; // [1:1:30]
@@ -31,14 +31,14 @@ Top_Height = 2; // [1:1:10]
 Gridfinity_Base_Style = "minimal"; // [minimal: No magnet holes with minimal thickness, thick: No magnet holes but with magnet hole base thickness, enabled: Magnet holes with skeletonized baseplate, enabled_full: Magnet holes with filled baseplate]
 
 // Add Gridfinity base stacking plates to outside of box top and bottom. Requires supports to print.
-Gridfinity_Stackable = true;
+Gridfinity_Stackable = false;
 
 /* [Features] */
 // Type or shape of seal to use, if desired
-Lip_Seal_Type = "wedge"; // [none: None, wedge: Wedge ▽, square: Square □, "filament-1.75mm": 1.75mm Filament ○]
+Lip_Seal_Type = "filament-1.75mm"; // [none: None, wedge: Wedge ▽, square: Square □, "filament-1.75mm": 1.75mm Filament ○]
 
 // Make the corners as thick as the box lip
-Reinforced_Corners = true;
+Reinforced_Corners = false;
 
 // Add a front grip to the box top (for boxes with two latches)
 Top_Grip = true;
@@ -47,13 +47,13 @@ Top_Grip = true;
 Hinge_End_Stops = true;
 
 // Add stacking latches and attachment points to the sides of the box
-Stacking_Latches = true;
+Stacking_Latches = false;
 
 // Latch style
 Latch_Type = "draw"; // [clip: Clip, draw: Draw]
 
 // Add a third hinge for boxes 5U or wider
-Third_Hinge = true;
+Third_Hinge = false;
 
 // Optional handle for sufficiently wide boxes
 Handle = true;
@@ -62,10 +62,16 @@ Handle = true;
 Label = true;
 
 // Custom text for optional label
-Label_Text = "Label";
+Label_Text = "";
 
 // Approximate height of text for optional label in millimeters
 Label_Text_Size = 10; // [5:0.1:25]
+
+// Bottom inverted hinge, allows the box to stand upright
+Bottom_Inverted_Hinge = true;
+
+// Top inverted hinge, could help low boxes stand upright while losing the ability to fril the lid all the way over
+Top_Inverted_Hinge = false;
 
 /* [Advanced Size Adjustments] */
 // Base wall thickness in millimeters for most of the box
@@ -343,7 +349,9 @@ module main() {
         handle=Handle,
         label=Label,
         label_text=Label_Text,
-        label_text_size=Label_Text_Size
+        label_text_size=Label_Text_Size,
+        bottom_inverted_hinge = Bottom_Inverted_Hinge,
+        top_inverted_hinge = Top_Inverted_Hinge
     )
     rbox_size_adjustments(
         wall_thickness=Wall_Thickness,
